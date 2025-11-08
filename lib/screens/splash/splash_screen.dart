@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../auth/login_screen.dart';
 import '../home/home_screen.dart';
+import '../auth/login_screen.dart'; // 이메일 로그인으로 바꿀 계획이면 유지, 지금은 안 써도 됨
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,21 +14,29 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuth();
+    _boot();
   }
 
-  void _checkAuth() async {
-    await Future.delayed(const Duration(seconds: 2));
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+  Future<void> _boot() async {
+    try {
+      // 1) Firebase Auth 유저 확보 (없으면 익명 로그인)
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        user = (await FirebaseAuth.instance.signInAnonymously()).user;
+      }
+
+      // 2) 화면이 그려진 다음 프레임에 네비게이션 (중요!)
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+              (_) => false,
+        );
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Auth error: $e')),
       );
     }
   }
@@ -36,7 +44,12 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(child: Text("AI Stock Insight", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold))),
+      body: Center(
+        child: Text(
+          'AI Stock Insight',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+      ),
     );
   }
 }
