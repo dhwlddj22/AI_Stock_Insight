@@ -21,4 +21,4 @@ AI 기반 주식 정보 및 분석 앱
 (추후 앱 UI 캡처 추가 예정)
 
 ## 👨‍💻 개발자
-Kang Chan | GitHub: [dhwlldj22](https://github.com/dhwlldj22)
+Kang Chan | GitHub: [dhwlldj22](https://github.com/dhwlddj22)
